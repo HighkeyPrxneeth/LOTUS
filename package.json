@@ -6,7 +6,6 @@
     "contracts",
     "sdk",
     "apps/web",
-    "apps/relayer",
     "redteam",
     "packages/domain",
     "services/api",
@@ -40,21 +39,12 @@
     "test:toolchain-browser": "node apps/web/e2e/toolchain.mjs",
     "tools:evidence": "node scripts/toolchain-evidence.mjs",
     "sandbox": "node scripts/sandbox.mjs",
-    "chain": "npm run chain -w contracts",
-    "deploy:local": "npm run deploy:local -w contracts",
-    "demo:seed": "npm run seed -w contracts",
-    "web": "npm run dev -w apps/web",
-    "relayer": "npm start -w apps/relayer",
-    "demo": "bash scripts/demo.sh",
-    "test:e2e": "node apps/web/e2e/application.mjs",
     "redteam": "npm start -w redteam",
     "eval": "python3 pipeline/evaluate.py && python3 pipeline/figures.py",
     "zk:setup": "bash circuits/setup.sh",
-    "demo:stage-fda": "npm run stage-fda -w contracts",
     "report": "bash scripts/build-report.sh"
   },
   "dependencies": {
-    "snarkjs": "^0.7.6",
-    "underscore": "^1.13.8"
+    "snarkjs": "^0.7.6"
   }
 }

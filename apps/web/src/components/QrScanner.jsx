@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 
 /**
- * Camera QR scanner with a paste fallback (desktops without a camera, or the headless demo).
+ * Camera QR scanner with a paste fallback for devices without camera access.
  * Calls onResult(text) once per successful scan.
  */
 export default function QrScanner({ onResult, label = "Scan QR code" }) {
@@ -40,15 +40,32 @@ export default function QrScanner({ onResult, label = "Scan QR code" }) {
   };
 
   return (
-    <div className="space-y-3">
-      <div id={`qr-${id}`} className={scanning ? "overflow-hidden rounded-xl border border-ink-600" : "hidden"} />
-      <div className="flex flex-wrap gap-2">
-        {scanning ? <button type="button" className="btn-ghost" onClick={stop}>Stop camera</button> : <button type="button" className="btn" onClick={start}>📷 {label}</button>}
+    <div className="qr-scanner">
+      <div id={`qr-${id}`} className="qr-camera" hidden={!scanning} />
+      <div className="qr-controls">
+        {scanning ? (
+          <button type="button" className="button outline" onClick={stop}>Stop camera</button>
+        ) : (
+          <button type="button" className="button" onClick={start}>📷 {label}</button>
+        )}
       </div>
-      {error && <p className="text-xs text-amber-300">{error}</p>}
-      <div className="flex gap-2">
-        <input className="input mono" placeholder="…or paste the code" value={paste} onChange={(e) => setPaste(e.target.value)} />
-        <button type="button" className="btn-ghost" disabled={!paste} onClick={() => { onResult(paste.trim()); setPaste(""); }}>Use</button>
+      {error && <p className="feedback error" role="alert">{error}</p>}
+      <div className="qr-controls">
+        <input
+          className="mono"
+          aria-label="QR code"
+          placeholder="…or paste the code"
+          value={paste}
+          onChange={(e) => setPaste(e.target.value)}
+        />
+        <button
+          type="button"
+          className="button outline"
+          disabled={!paste.trim()}
+          onClick={() => { onResult(paste.trim()); setPaste(""); }}
+        >
+          Use
+        </button>
       </div>
     </div>
   );

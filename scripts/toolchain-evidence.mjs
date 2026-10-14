@@ -1,12 +1,30 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
+import { basename } from "node:path";
 const json = (path) => JSON.parse(readFileSync(path, "utf8"));
+// The synopsis is supplied separately; reuse recorded provenance unless its path
+// is explicitly supplied. No developer-specific Downloads folder is required.
+const sourcePath = process.argv[2] || process.env.LOTUS_SYNOPSIS_PATH;
+const previous = json("docs/toolchain-evidence.json");
+const sourceDocument = sourcePath
+  ? {
+      name: basename(sourcePath),
+      sha256: createHash("sha256").update(readFileSync(sourcePath)).digest("hex"),
+    }
+  : previous.sourceDocument;
+assert.match(sourceDocument?.sha256 || "", /^[a-f0-9]{64}$/);
 const firefly = json("test-results/firefly/acceptance.json");
 const ipfs = json("test-results/ipfs/acceptance.json");
 const firstRun = json("test-results/firefly/first-run.json");
 const liveBrowser = json("test-results/toolchain-browser.json");
 const caliper = json("test-results/caliper/latest.json");
+if (caliper.report) {
+  const normalized = caliper.report.replaceAll("\\", "/");
+  const reportRoot = "test-results/caliper/";
+  assert.ok(normalized.includes(reportRoot), "Unexpected Caliper report path.");
+  caliper.report = normalized.slice(normalized.indexOf(reportRoot));
+}
 const brownie = json("test-results/brownie/gas-reference.json");
 const brownieXml = readFileSync("test-results/brownie-tests.xml", "utf8");
 assert(
@@ -28,16 +46,9 @@ const line = readFileSync("test-results/tooling-browser-tests.log", "utf8")
 const browser = JSON.parse(line);
 assert.equal(browser.pageErrors.length, 0);
 const result = {
-  date: "2026-10-14",
-  sourceDocument: {
-    name: "LOTUS - Synopsis Final.pdf",
-    pages: 18,
-    sha256: createHash("sha256")
-      .update(
-        readFileSync("C:/Users/highk/Downloads/LOTUS - Synopsis Final.pdf")
-      )
-      .digest("hex"),
-  },
+  // Preserve the delivery date; regenerating a summary is not a fresh full run.
+  date: previous.date,
+  sourceDocument,
   operationalProfile: {
     ledger: "Hyperledger Fabric",
     transport: "FireFly Core / FabConnect",

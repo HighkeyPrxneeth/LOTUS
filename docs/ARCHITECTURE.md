@@ -1,5 +1,7 @@
 # Architecture
 
+Historical EVM reference architecture. The operational Fabric application is described in [TOOLCHAIN_MIGRATION.md](TOOLCHAIN_MIGRATION.md); the original contracts remain for regression and Brownie cost measurements.
+
 ## Layers
 
 1. **Smart contracts (Solidity 0.8.24, OpenZeppelin)**: the source of truth for custody, permits,

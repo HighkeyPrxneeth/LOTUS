@@ -14,11 +14,8 @@ if (/^DEPLOYER_KEY=0x[0-9a-fA-F]{64}$/m.test(env)) {
   process.exit(0);
 }
 const w = Wallet.createRandom();
-const relayer = Wallet.createRandom();
-let next = env.replace(/^DEPLOYER_KEY=.*$/m, `DEPLOYER_KEY=${w.privateKey}`);
-next = /^RELAYER_KEY=/m.test(next) ? next.replace(/^RELAYER_KEY=.*$/m, `RELAYER_KEY=${relayer.privateKey}`) : `${next.trimEnd()}\nRELAYER_KEY=${relayer.privateKey}\n`;
+const next = env.replace(/^DEPLOYER_KEY=.*$/m, `DEPLOYER_KEY=${w.privateKey}`);
 fs.writeFileSync(envPath, next, { mode: 0o600 });
 console.log("Wrote contracts/.env (keep it secret; it is git-ignored).");
 console.log(`Deployer address: ${w.address}`);
-console.log(`Relayer address:  ${relayer.address}`);
-console.log("Fund both from https://faucet.polygon.technology (network: Amoy), then run: npm run amoy:all");
+console.log("Fund the deployer from https://faucet.polygon.technology (network: Amoy), then run: npm run amoy:all -w contracts");

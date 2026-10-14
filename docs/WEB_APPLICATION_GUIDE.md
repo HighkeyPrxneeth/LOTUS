@@ -9,7 +9,7 @@ The revamp is a responsive web application. Patients use a phone-oriented, insta
 From the repository root, use Node 22.13 or newer. Node 22 is the recommended runtime for the retained Hardhat reference tests. The application uses Node's SQLite API; some Node releases display an experimental API notice.
 
 ```powershell
-npm install
+npm ci
 npm run build
 npm start
 ```

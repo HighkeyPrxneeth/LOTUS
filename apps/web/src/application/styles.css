@@ -1,3 +1,51 @@
+/* Small application reset; no utility CSS framework is needed. */
+html {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+}
+body {
+  line-height: inherit;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd {
+  margin: 0;
+}
+ul, ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+button, input, select, textarea {
+  color: inherit;
+  margin: 0;
+}
+button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-transform: none;
+}
+table {
+  border-collapse: collapse;
+  border-color: inherit;
+  text-indent: 0;
+}
+img, svg, video, canvas {
+  display: block;
+  vertical-align: middle;
+}
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+[hidden] {
+  display: none !important;
+}
+
 :root {
   --forest: #173e35;
   --forest-deep: #103027;
@@ -114,6 +162,27 @@ svg {
   font: 12px/1.5 monospace;
   overflow-wrap: anywhere;
 }
+.qr-scanner {
+  display: grid;
+  gap: 12px;
+}
+.qr-camera {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.qr-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.qr-controls input {
+  min-width: 0;
+  flex: 1;
+}
+.qr-controls button {
+  flex-shrink: 0;
+}
 .block-muted {
   display: block;
   color: var(--muted);
@@ -162,9 +231,7 @@ svg {
   color: var(--muted);
   margin-left: 14px;
 }
-.button,
-.btn,
-.btn-ghost {
+.button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -181,12 +248,10 @@ svg {
   line-height: 1.35;
   transition: background 0.18s, transform 0.18s;
 }
-.button:hover,
-.btn:hover {
+.button:hover {
   background: #255742;
 }
-.button.outline,
-.btn-ghost {
+.button.outline {
   background: transparent;
   color: var(--forest);
   border-color: #ccd6c4;

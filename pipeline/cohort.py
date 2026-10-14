@@ -59,7 +59,7 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
     path = out / f"cohort_{args.patients}_s{args.seed}.json"
     path.write_text(json.dumps(rows))
-    print(f"{len(rows)} dispenses for {args.patients} patients → {path}")
+    print(f"{len(rows)} dispenses for {args.patients} patients -> {path}")
 
 
 if __name__ == "__main__":

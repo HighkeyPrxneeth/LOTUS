@@ -4,14 +4,14 @@ const hre = require("hardhat");
 const { deployLotus } = require("./deploy-lib");
 
 /**
- * Deploys LOTUS and writes addresses + ABIs to deployments/<network>.json, which the web app reads.
+ * Deploys the EVM reference and writes addresses + ABIs to deployments/<network>.json.
  * Deploys the real Groth16 verifier unless VERIFIER_ADDRESS is given (or USE_MOCK_VERIFIER=1 locally).
  */
 async function main() {
   const { ethers, network } = hre;
   const [admin] = await ethers.getSigners();
   const isLocal = ["hardhat", "localhost"].includes(network.name);
-  // Real Groth16 verifier by default everywhere. USE_MOCK_VERIFIER=1 is for quick local UI work only.
+  // Real Groth16 verifier by default. Mocks are restricted to local reference tests.
   let verifier = process.env.VERIFIER_ADDRESS;
   if (process.env.USE_MOCK_VERIFIER) {
     if (!isLocal) throw new Error("Refusing to deploy the mock verifier to a public network.");
@@ -37,10 +37,6 @@ async function main() {
   const dir = path.join(__dirname, "..", "deployments");
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, `${network.name}.json`), JSON.stringify(out, null, 2));
-  // The web app imports this file directly.
-  const webDir = path.join(__dirname, "..", "..", "apps", "web", "src", "generated");
-  fs.mkdirSync(webDir, { recursive: true });
-  fs.writeFileSync(path.join(webDir, "deployment.json"), JSON.stringify(out, null, 2));
 
   console.log(`LOTUS deployed to ${network.name}`);
   for (const n of names) console.log(`  ${contractNames[n].padEnd(22)} ${out.contracts[n].address}`);
