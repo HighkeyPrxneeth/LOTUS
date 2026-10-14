@@ -256,6 +256,12 @@ try {
     "Recalled lot is blocked through the transient path"
   );
   const feed = await (await fetch(base + "/api/public/feed")).json();
+  const publishedLot = feed.lots.find((l) => l.id === lot.id);
+  check(Boolean(publishedLot?.manufacturer), "Fabric public feed resolves the manufacturer name");
+  const verified = await (await fetch(base + `/api/public/verify?code=${lot.code}&lot=${lot.lotNumber}`)).json();
+  for (const published of [publishedLot, verified.matches.find((l) => l.id === lot.id)])
+    check(Boolean(published) && ['manufacturerId', 'quantity', 'dispensedUnits', 'dispenseRecords', 'reportCount', 'severitySum', 'safetySignal', 'currentSegment']
+      .every((field) => !Object.hasOwn(published, field)), "FireFly-backed anonymous responses contain no operational lot fields");
   check(
     feed.recalls.some((r) => r.lotId === lot.id),
     "Patient broad feed reads the FireFly-backed recall"

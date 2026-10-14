@@ -17,10 +17,10 @@
   "validation": {
     "contractTests": 37,
     "sdkTests": 4,
-    "apiTests": 11,
+    "apiTests": 13,
     "applicationBrowserChecks": 40,
     "brownieTests": 6,
-    "fireflyChecks": 22,
+    "fireflyChecks": 25,
     "ipfsChecks": 7,
     "fabricFirstRunChecks": 9,
     "operationalBrowserChecks": 7
@@ -30,8 +30,8 @@
     "coreVersion": "1.5.0",
     "connectorVersion": "0.10.0",
     "channel": "lotus-tooling",
-    "checks": 22,
-    "checkedAt": 1791988048008,
+    "checks": 25,
+    "checkedAt": 1792001686281,
     "passed": true,
     "features": [
       "authenticated staff invitation",
@@ -79,7 +79,7 @@
   "caliper": {
     "tool": "Hyperledger Caliper",
     "version": "0.7.1",
-    "runId": "531363ef-c3a5-44e9-9a92-d4c570307d17",
+    "runId": "33324555-a837-4104-96cd-fb17908f3d84",
     "channel": "lotus-tooling",
     "workers": 1,
     "writeConcurrency": 1,
@@ -87,34 +87,36 @@
       "public-feed": {
         "successful": 24,
         "failed": 0,
-        "meanLatencyMs": 64.6035666666667,
-        "p50LatencyMs": 32.72270000000003,
-        "p95LatencyMs": 274.2225000000001
+        "meanLatencyMs": 68.72395,
+        "p50LatencyMs": 25.85660000000007,
+        "p95LatencyMs": 319.48900000000003
       },
       "register-lot": {
         "successful": 12,
         "failed": 0,
-        "meanLatencyMs": 1077.7738333333334,
-        "p50LatencyMs": 1053.6150000000016,
-        "p95LatencyMs": 1328.5937999999987
+        "meanLatencyMs": 1120.1845666666666,
+        "p50LatencyMs": 1062.8846000000012,
+        "p95LatencyMs": 1467.6221000000005
       },
       "dispense": {
         "successful": 12,
         "failed": 0,
-        "meanLatencyMs": 1091.8154999999995,
-        "p50LatencyMs": 1058.3891000000003,
-        "p95LatencyMs": 1401.1322999999975
+        "meanLatencyMs": 1136.6097583333315,
+        "p50LatencyMs": 1088.080399999999,
+        "p95LatencyMs": 1348.5581999999995
       }
     },
     "inventoryReconciled": true,
     "sourceSha256": {
-      "chaincode/lotus/index.cjs": "ec75a7dc432593b00773be323a49efe06b2497ec97f092ca9d3b5783f420b98f",
-      "packages/domain/src/engine.js": "bc3b68fc4b68e89b84f1d7df6e7da7c871e1896f008707b46b27efcb4089a22c",
-      "tools/caliper/workload.cjs": "6ae0a946be6d7663746fa1a0e9a5e0dec0ad5b6eb3fc3a65ed55bfc0042688fe",
-      "tools/caliper/serial-rate.cjs": "825e7e2c8000d1e68214367b907a6c0a64b3571da3445e51970bfd0f6998d437"
+      "chaincode/lotus/index.cjs": "d368eb1082529fb624ab0f33b04773a1cefceabf94f37444a8150239218b5130",
+      "packages/domain/src/engine.js": "08ac13d3716962ca64c846356a04d205ddd419add6173445a54704ae17df8ba3",
+      "tools/caliper/workload.cjs": "b4235de8724284c7418ab71fce8ee02eda5a984440565b000348acae7e15df8b",
+      "tools/caliper/serial-rate.cjs": "65dc1b34b23c12f8e58b1a7f477ce54079db563559420ffa61d061cc472eacb2"
     },
+    "sourceCommit": "987bdb775d2d2bc40576abf0914b88a950cc1620",
+    "checkedAt": "2026-10-14T18:23:40.937Z",
     "scope": "Single-host integration run. Reads are evaluated; writes include valid commit. No Fabric gas metric.",
-    "report": "test-results/caliper/531363ef-c3a5-44e9-9a92-d4c570307d17/report.html"
+    "report": "test-results/caliper/33324555-a837-4104-96cd-fb17908f3d84/report.html"
   },
   "brownie": {
     "tool": "eth-brownie",

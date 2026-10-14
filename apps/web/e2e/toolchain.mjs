@@ -17,7 +17,7 @@ const server = await new Promise((done) => {
 });
 const browser = await chromium.launch({
   headless: true,
-  channel: process.env.PLAYWRIGHT_CHANNEL || "msedge",
+  ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}),
 });
 try {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } }),

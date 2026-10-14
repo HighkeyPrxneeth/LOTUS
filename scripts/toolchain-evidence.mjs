@@ -19,6 +19,9 @@ const ipfs = json("test-results/ipfs/acceptance.json");
 const firstRun = json("test-results/firefly/first-run.json");
 const liveBrowser = json("test-results/toolchain-browser.json");
 const caliper = json("test-results/caliper/latest.json");
+for (const path of ["chaincode/lotus/index.cjs", "packages/domain/src/engine.js", "tools/caliper/workload.cjs", "tools/caliper/serial-rate.cjs"])
+  assert.equal(caliper.sourceSha256?.[path], createHash("sha256").update(readFileSync(path)).digest("hex"),
+    `Caliper evidence is stale for ${path}; rerun npm run bench:caliper.`);
 if (caliper.report) {
   const normalized = caliper.report.replaceAll("\\", "/");
   const reportRoot = "test-results/caliper/";
@@ -61,7 +64,7 @@ const result = {
   validation: {
     contractTests: 37,
     sdkTests: 4,
-    apiTests: 11,
+    apiTests: 13,
     applicationBrowserChecks: browser.checks,
     brownieTests: 6,
     fireflyChecks: firefly.checks,

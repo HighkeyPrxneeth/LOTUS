@@ -6,6 +6,10 @@ The revamp is a responsive web application. Patients use a phone-oriented, insta
 
 ## Run the application
 
+Browser tests use Playwright's bundled Chromium by default. Install it with `npx playwright install chromium` (Linux: `npx playwright install --with-deps chromium`). Set `PLAYWRIGHT_CHANNEL` only to explicitly select another installed browser.
+
+The anonymous bulletin and public verification share an explicit field allow-list for medicine identity, expiry, manufacturer name and recall instructions. Internal manufacturer IDs, issuance/dispense totals and adverse-event counters remain in authenticated snapshots. Broad commitment leaves are still published for local matching and proof generation, so their number reveals record cardinality; this change does not establish confidentiality against consortium peer administrators or remove the production feed-publication gates below.
+
 From the repository root, use Node 22.13 or newer. Node 22 is the recommended runtime for the retained Hardhat reference tests. The application uses Node's SQLite API; some Node releases display an experimental API notice.
 
 ```powershell
