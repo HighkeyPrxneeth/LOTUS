@@ -100,7 +100,7 @@ def fig_gas():
 
 
 def fig_timing():
-    data = json.loads((ROOT.parent / "redteam" / "results.json").read_text())
+    data = json.loads((ROOT.parent / "test-results" / "redteam" / "results.json").read_text())
     rows = next(r for r in data if r["id"] == "A2")["rows"]
     batches = sorted({r["batchSeconds"] for r in rows})
     rates = sorted({r["dispensesPerHour"] for r in rows})

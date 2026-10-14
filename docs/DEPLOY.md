@@ -1,7 +1,6 @@
-# Deploying to Polygon Amoy (P8)
+# Deploying the EVM reference to Polygon Amoy
 
-The local demo (`npm run demo`) needs nothing but Node. A public testnet deployment gives the project a
-citable address. Everything below runs from the repository root on a normal internet connection.
+These commands retain the original Solidity deployment reference. They do not deploy or configure the Fabric web application; use [TOOLCHAIN_MIGRATION.md](TOOLCHAIN_MIGRATION.md) for that stack. Run them from the repository root.
 
 ## 1. Use the public trusted setup (once)
 
@@ -19,10 +18,9 @@ proving key and `Groth16Verifier.sol`. Commit the changed files (`apps/web/publi
 npm run amoy:wallet -w contracts
 ```
 
-This writes a fresh deployer key and relayer key to `contracts/.env` (git-ignored, readable only by you)
-and prints both addresses. Then:
+This writes a fresh deployer key to `contracts/.env` (git-ignored) and prints its address. Then:
 
-1. Fund both addresses with test POL from https://faucet.polygon.technology (network: Amoy).
+1. Fund the deployer address with test POL from https://faucet.polygon.technology (network: Amoy).
 2. Create a free API key at https://polygonscan.com/myapikey and paste it into `POLYGONSCAN_API_KEY=`
    in `contracts/.env`.
 
@@ -42,22 +40,8 @@ This deploys the verifier and the seven contracts (`contracts/deployments/amoy.j
 contract's source on amoy.polygonscan.com, and registers the actors. Each step can be re-run on its own:
 `deploy:amoy`, `verify:amoy`, `amoy:actors`.
 
-## 5. Point the apps at Amoy
+## 5. Inspect the reference deployment
 
-```bash
-cp contracts/deployments/amoy.json apps/web/src/generated/deployment.json
-printf "VITE_RPC_URL=https://rpc-amoy.polygon.technology\nVITE_USE_WALLET=1\nVITE_RELAYER_URL=http://localhost:8787\n" > apps/web/.env.local
-npm run build -w apps/web      # dashboards now sign with MetaMask on Amoy
+Addresses, constructor arguments and ABIs are written to `contracts/deployments/amoy.json`. The responsive web application uses its authenticated API and selected Fabric profile. The old MetaMask dashboards and development-key relayer have been removed.
 
-RPC_URL=https://rpc-amoy.polygon.technology \
-DEPLOYMENT=contracts/deployments/amoy.json \
-RELAYER_KEY=$(grep RELAYER_KEY contracts/.env | cut -d= -f2) \
-npm run relayer
-```
-
-`apps/web/dist/` is a static site; it can be hosted on GitHub Pages, Netlify or Vercel.
-
-## Demo reset (local)
-
-`npm run demo` always starts a fresh local chain, redeploys, reseeds and stages the FDA replay lots, so
-re-running it is the reset.
+For an isolated local EVM reference, run `npm run chain -w contracts`, then `npm run deploy:local -w contracts` in another terminal. Use `npm run test:brownie` for executable migration regressions and gas measurements; use `npm run sandbox` for the current web replay interface.

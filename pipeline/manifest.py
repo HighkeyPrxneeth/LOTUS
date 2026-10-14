@@ -30,7 +30,8 @@ def sha256(path: Path) -> str:
 def run_steps() -> dict:
     files = {}
     for cmd, outputs in STEPS:
-        subprocess.run(cmd, check=True, capture_output=True)
+        # Keep routine output quiet while preserving actionable child errors.
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
         for name in outputs:
             files[name] = {"sha256": sha256(OUT / name), "command": " ".join(Path(c).name if i < 2 else c for i, c in enumerate(cmd))}
     return files

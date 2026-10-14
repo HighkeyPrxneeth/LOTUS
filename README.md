@@ -9,14 +9,14 @@ LOTUS records medicine lot custody and pharmacy dispensing, then lets recipients
 Use Node 22.13 or newer from this repository root:
 
 ```powershell
-npm install
+npm ci
 npm run build
 npm start
 ```
 
 Open [LOTUS](http://127.0.0.1:8787). Staff access at `/login` provides first-run operator setup; choose your own account credentials. Approve organizations and create private staff invitations. Patients enter at `/patient` without a staff account. No business inventory or patient data is seeded into the normal profile.
 
-`npm start` selects the prepared **Fabric + FireFly + IPFS** operational profile. Start its ledger and document services using the toolchain guide before launching a fresh checkout. The active delivered preview uses this stack and is ready for your first operator account.
+`npm start` selects the **Fabric + FireFly + IPFS** operational profile. Prepare its ledger and document services using the toolchain guide before launching a fresh checkout. Runtime binaries, identities and databases are local state and are excluded from Git.
 
 `npm run dev` runs the API and frontend development server. `npm run sandbox` starts a separate replay profile on port 8789.
 
@@ -60,4 +60,6 @@ Fabric tests require the acceptance channel and its configuration. Browser tests
 | `contracts`, `sdk`, `circuits` | Retained EVM/cryptographic reference and regression fixtures |
 | `pipeline`, `redteam` | Retained research/source pipelines and adversary simulations |
 
-[Migration design](docs/HYPERLEDGER_MIGRATION_PLAN.md) retains the 35-capability checklist and production architecture. [Original report](docs/REPORT.md), threat model and old demo files describe the earlier proof of concept; their synthetic metrics are not performance measurements of this application.
+[Migration design](docs/HYPERLEDGER_MIGRATION_PLAN.md) retains the 35-capability checklist and production architecture. The [original report](docs/REPORT.md) and [threat model](docs/THREAT_MODEL.md) preserve the earlier research baseline; their synthetic metrics are not performance measurements of this application. Report exports can be regenerated with `npm run report` (Pandoc and Playwright Chromium required).
+
+The superseded EVM demo UI, relayer, seeding scripts, recordings and planning wireframes have been removed. EVM deployment commands live in the `contracts` workspace; they are reference tooling and do not configure the Fabric web application. Caliper dependencies remain isolated in `tools/caliper`. Generated test and red-team reports go under ignored `test-results/`.

@@ -31,6 +31,10 @@ apps/web/src/generated/demo-patient.json
 contracts/deployments/
 !apps/web/public/zk/*.zkey
 .demo-logs/
+docs/LOTUS_Report.html
+docs/LOTUS_Report.pdf
+docs/LOTUS_Report.docx
+docs/demo/
 .lotus-data/
 .lotus-sandbox-data/
 .lotus-dev-data/

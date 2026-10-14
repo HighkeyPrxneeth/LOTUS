@@ -1,7 +1,9 @@
 # Threat model and privacy analysis (D6)
 
+Historical EVM research baseline. Demo relayer/UI references describe removed proof-of-concept code. Current application boundaries and outstanding production privacy work are documented in [WEB_APPLICATION_GUIDE.md](WEB_APPLICATION_GUIDE.md).
+
 Owners: P2 (Privacy & Key Custody) and P4 (Red Team). Every claim below is backed by a test in
-`contracts/test/` or a simulation in `redteam/` (run `npm run redteam`; results in `redteam/REPORT.md`).
+`contracts/test/` or a simulation in `redteam/` (run `npm run redteam`; generated results are in `test-results/redteam/REPORT.md`).
 
 ## 1. What we protect
 

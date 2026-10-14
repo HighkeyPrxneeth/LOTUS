@@ -9,6 +9,8 @@ P Pattabhi Ram · Puripanda Venkata Praneeth · K. Poorna Sai Praneeth
 
 ---
 
+> Historical EVM proof-of-concept report. Demo source paths describe the original baseline; the superseded demo interfaces and relayer have been removed. For the current Fabric application and measured toolchain evidence, see [TOOLCHAIN_MIGRATION.md](TOOLCHAIN_MIGRATION.md). PDF/Word exports are generated locally and are not tracked.
+
 ## Abstract
 
 Drug recalls are issued for a specific manufacturing lot, but the final hop of the supply chain, from
@@ -144,13 +146,13 @@ flags unregistered lots as possible counterfeits and shows custody path, expiry 
 - **Coverage:** 100% of lines and 95% of branches in the LOTUS contracts (CI gate: branches ≥ 90%).
 - **Cross-implementation checks:** the on-chain tree root equals the SDK's; the SDK's external
   nullifiers and signal hashes equal the contract's.
-- **Browser end-to-end test** (`npm run test:e2e`): a fresh lot is registered, shipped, accepted,
+- **Browser end-to-end test** (superseded EVM demo; the current web acceptance command is `npm run test:browser`): a fresh lot is registered, shipped, accepted,
   prescribed, scanned, batch-dispensed, recalled; the patient is alerted, acknowledges and reports with
   real proofs; the phone is "lost" and recovered from Guardian shares; a fake lot fails verification.
 
 ## 6. Security analysis
 
-Summarised from `docs/THREAT_MODEL.md` and `redteam/REPORT.md`:
+Summarised from `docs/THREAT_MODEL.md` and the original red-team run. Reproduce the simulations with `npm run redteam`; generated reports are now stored under `test-results/redteam/`:
 
 | Attack | Outcome |
 |---|---|

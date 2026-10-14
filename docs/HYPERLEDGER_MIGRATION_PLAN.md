@@ -8,7 +8,9 @@ Use **Hyperledger Fabric for shared business rules**, a **mobile-oriented patien
 
 The current repository contains a working technical proof of concept. Its business rules and cryptographic work deserve preservation; its test identities, browser queues, direct blockchain access, and demonstration workflows need replacement. A new application must preserve the intended features without carrying forward inaccurate privacy, authenticity, or effectiveness claims.
 
-## Current application assessment
+## Assessment of the original proof of concept
+
+The source paths in this assessment describe the 13 October baseline. The superseded demo UI, relayer and wireframes have since been removed; the implementation guides above describe the current code.
 
 The existing contract suite passed **37 tests**, including real Groth16 proof verification; the SDK passed **4 tests**; the web production build succeeded during this assessment. These checks establish a runnable business-rule and cryptographic baseline. They do not establish production readiness, background alert delivery, real-world recall accuracy, or operation across independently managed organizations. The local Node runtime produced an unsupported-version warning from Hardhat; pin compatible runtimes for reproducible baseline runs. Browser end-to-end tests and coverage were not rerun in this assessment.
 
@@ -219,7 +221,7 @@ Guardian recovery cannot revoke knowledge already learned by a stolen unlocked p
 
 Use one visual system with distinct role workspaces. Patients receive a mobile-oriented PWA; operational staff receive desktop-first web tools with a scanning view on phones or handhelds. All interfaces run in a browser. No native mobile or desktop application is part of this scope.
 
-The accompanying [interface preview](INTERFACE_PREVIEW.html) shows the planned navigation and representative states. It is a planning wireframe with illustrative data and no live transactions.
+The responsive interfaces are now implemented in `apps/web/src/application`. The earlier illustrative planning wireframe has been removed; use the application guide to inspect the working screens.
 
 | Stakeholder | Primary interface | Navigation | Main actions |
 | --- | --- | --- | --- |
