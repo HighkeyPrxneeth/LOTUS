@@ -31,5 +31,16 @@ apps/web/src/generated/demo-patient.json
 contracts/deployments/
 !apps/web/public/zk/*.zkey
 .demo-logs/
+.lotus-data/
+.lotus-sandbox-data/
+.lotus-dev-data/
+.lotus-local-data/
+.fabric-runtime/
+.fabric-network/
+test-results/
+.tooling/
+tools/brownie/build/
+tools/brownie/reports/
+tools/brownie/.pytest_cache/
 contracts/config/actors.*.json
 !contracts/config/actors.example.json

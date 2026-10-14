@@ -43,12 +43,12 @@ export default function QrScanner({ onResult, label = "Scan QR code" }) {
     <div className="space-y-3">
       <div id={`qr-${id}`} className={scanning ? "overflow-hidden rounded-xl border border-ink-600" : "hidden"} />
       <div className="flex flex-wrap gap-2">
-        {scanning ? <button className="btn-ghost" onClick={stop}>Stop camera</button> : <button className="btn" onClick={start}>📷 {label}</button>}
+        {scanning ? <button type="button" className="btn-ghost" onClick={stop}>Stop camera</button> : <button type="button" className="btn" onClick={start}>📷 {label}</button>}
       </div>
       {error && <p className="text-xs text-amber-300">{error}</p>}
       <div className="flex gap-2">
         <input className="input mono" placeholder="…or paste the code" value={paste} onChange={(e) => setPaste(e.target.value)} />
-        <button className="btn-ghost" disabled={!paste} onClick={() => { onResult(paste.trim()); setPaste(""); }}>Use</button>
+        <button type="button" className="btn-ghost" disabled={!paste} onClick={() => { onResult(paste.trim()); setPaste(""); }}>Use</button>
       </div>
     </div>
   );

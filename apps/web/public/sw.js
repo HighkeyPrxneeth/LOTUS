@@ -6,8 +6,8 @@
  * Recall matching needs the decrypted secret, so it runs in the page (on open and every 30 s),
  * never in the worker; the worker only shows the notification.
  */
-const CACHE = "lotus-v1";
-const PRECACHE = ["/", "/patient", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/zk/lotus_membership.wasm", "/zk/lotus_final.zkey"];
+const CACHE = "lotus-web-v2";
+const PRECACHE = ["/", "/patient", "/verify", "/guardian", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/zk/lotus_membership.wasm", "/zk/lotus_final.zkey", ...__ASSET_LIST__];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
@@ -22,6 +22,8 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET" || url.origin !== self.location.origin) return;
+  // Sessions, protected documents, staff queries and anonymous submissions never enter caches.
+  if (url.pathname.startsWith("/api/")) return;
 
   if (e.request.mode === "navigate") {
     e.respondWith(fetch(e.request).catch(() => caches.match("/patient").then((r) => r || caches.match("/"))));

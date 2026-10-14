@@ -1,101 +1,63 @@
-# LOTUS: Lot-Oriented Traceability for Unlinkable Subjects
+# LOTUS web application
 
-> When one bad batch of a medicine is recalled, only the patients who actually received **that batch**
-> should be told, without anyone (not even the regulator) learning who they are.
+The requested FireFly, Caliper, Brownie and IPFS integrations are implemented and exercised against real local runtimes. See [toolchain migration and synopsis feature mapping](docs/TOOLCHAIN_MIGRATION.md) for their roles, setup, evidence and deployment boundaries.
 
-LOTUS records the last, unrecorded hop of the drug supply chain (**pharmacy → patient**) on an EVM
-blockchain while keeping patients off-chain. Patients' phones recognise their own records, and
-zero-knowledge proofs let them acknowledge recalls and report side effects anonymously.
+LOTUS records medicine lot custody and pharmacy dispensing, then lets recipients recognize relevant recalls and respond privately. The revamped application runs entirely in a browser: a phone-oriented patient PWA, staff workspaces, public pack verification and a separate guardian share vault.
 
-| Today (drug-code matching) | With LOTUS (lot matching) |
-|---|---|
-| Precision ≈ 0.17: about 5 in 6 alerts are false alarms | Precision ≈ 0.99 |
-| Sensitivity 0.85–0.88: cash sales and transfers are missed | ≥ 0.993 together with existing channels |
-| Nobody can prove how many recalled units left a pharmacy | Closure accounting per pharmacy per lot |
-| No feedback on whether patients got the message | Anonymous acknowledgements → live recall effectiveness |
-| Side effects reach regulators slowly | Verified anonymous reports raise an early safety signal |
+## Start
 
-*(10,000–100,000-patient synthetic cohorts with injected lost phones and misrecorded lots; see `docs/REPORT.md`.)*
+Use Node 22.13 or newer from this repository root:
 
-**Watch first:** [`docs/demo/lotus-demo.mp4`](docs/demo/lotus-demo.mp4), a 2-minute captioned walkthrough recorded from the real app.
-**Read:** [`docs/LOTUS_Report.pdf`](docs/LOTUS_Report.pdf) (also `.docx`).
-
-## Run the demo
-
-Requirements: Node 20+ (Python 3.11+ only for the evaluation pipeline).
-
-```bash
+```powershell
 npm install
-npm run demo          # fresh chain → deploy → seed → FDA replay lots → relayer → web app on http://localhost:5173
+npm run build
+npm start
 ```
 
-Five-minute walkthrough: **Patient app** → set a PIN → "Load seeded demo patient" →
-**Regulator** → recall lot `D298765` → **Patient app** → red alert → send an anonymous acknowledgement →
-**Regulator** shows effectiveness → **Patient app** → "Simulate lost phone" → recover from Guardians →
-**Verify a pack** → type a fake lot → "possible counterfeit".
+Open [LOTUS](http://127.0.0.1:8787). Staff access at `/login` provides first-run operator setup; choose your own account credentials. Approve organizations and create private staff invitations. Patients enter at `/patient` without a staff account. No business inventory or patient data is seeded into the normal profile.
 
-> Firewalled network that blocks the Solidity compiler download? Prefix with `LOTUS_SOLCJS=1`.
+`npm start` selects the prepared **Fabric + FireFly + IPFS** operational profile. Start its ledger and document services using the toolchain guide before launching a fresh checkout. The active delivered preview uses this stack and is ready for your first operator account.
 
-## Everything else
+`npm run dev` runs the API and frontend development server. `npm run sandbox` starts a separate replay profile on port 8789.
 
-| Command | What it does |
-|---|---|
-| `npm test` | 37 contract tests (incl. real Groth16 proofs and invariant fuzzing) + SDK tests |
-| `npm run coverage:check -w contracts` | Coverage with a 90% branch gate (currently 100% lines / 95% branches) |
-| `npm run test:e2e` | Browser end-to-end test of the whole flow (needs `npm run demo` running) |
-| `npm run redteam` | Six adversary simulations → `redteam/REPORT.md` |
-| `npm run eval` | Precision / sensitivity / scaling evaluation + figures in `docs/figures/` |
-| `python pipeline/manifest.py verify` | Checks the datasets regenerate byte for byte |
-| `npm run zk:setup` | Rebuilds the circuit and verifier, using the public Hermez ceremony when it can download it |
-| `npm run report` | Rebuilds `docs/LOTUS_Report.pdf` and `.docx` from `docs/REPORT.md` |
-| `node apps/web/e2e/record-demo.mjs` | Re-records the captioned demo video (with the demo running) |
-| `npm run amoy:wallet -w contracts` then `npm run amoy:all -w contracts` | Polygon Amoy: create keys, then deploy + verify + register actors (`docs/DEPLOY.md`) |
+## Working application features
 
-## Repository layout
+- Authorized manufacturer, distributor, pharmacy, prescriber, regulator, operator and auditor workspaces.
+- Product/lot registration, verified document bytes, pack codes, two-sided shipments, rejection, returns, quarantine and documented stock losses.
+- Expiring prescription permits, partial fills, pharmacy binding/transfer, one-time patient codes and atomic single/batch dispensing.
+- Committed, signed patient receipts; encrypted browser vault; local recall matching; two-of-three guardian recovery of receipts, prescriptions and allocated indices.
+- Browser-generated Groth16 proofs for anonymous recall acknowledgements and encrypted side-effect reports, with real verifier and nullifier checks.
+- Exact-lot recalls, safety thresholds, privacy-controlled regional records, source-preserving imports and isolated recall replay.
+- Installable patient web interface, cached/offline checks with explicit freshness, camera/paste scanning and regional-language recall alerts.
 
-```
-contracts/    7 Solidity contracts + Groth16 verifier, tests, deploy / verify / benchmark scripts
-circuits/     Circom membership circuit and trusted-setup script
-sdk/          Patient-side crypto: commitments, lean Merkle tree, nullifiers, proofs, Guardians
-apps/web/     Role dashboards, patient PWA, public verify page, browser e2e test
-apps/relayer/ Gas-free relayer so patients never need a crypto wallet
-pipeline/     openFDA fetcher, synthetic cohorts, evaluation, figures, dataset manifest
-redteam/      Adversary simulations
-docs/         Report (D7), threat model (D6), architecture, improvements, deployment, team guide
+## Real Hyperledger integration
+
+The normal start command uses real Fabric chaincode, FireFly contract APIs/events and encrypted IPFS documents. `npm run start:local` is an explicit durable SQLite development mode. Both execute the same domain rules; Fabric failure never falls back to local state.
+
+A Fabric 3.1.5 integration network is prepared with two endorsing organizations, TLS identities, an orderer and an external chaincode service. It runs directly in Ubuntu WSL without Docker or a Go installation. Its acceptance channel has passed the full custody/dispense/recall flow and real proof verification inside chaincode.
+
+See [setup, Fabric enrollment and verification](docs/WEB_APPLICATION_GUIDE.md) before switching a profile. The local network is an integration environment, not an independently administered production consortium. The guide records remaining deployment, privacy, key-custody, scaling and notification work.
+
+## Verification
+
+```powershell
+npm test
+npm run test:browser
+npm run test:fabric
 ```
 
-## Contracts
+Fabric tests require the acceptance channel and its configuration. Browser tests use isolated temporary profiles and check real proofs, encrypted report retrieval, complete guardian recovery and phone layouts. Normal profile data remains untouched.
 
-| Contract | Responsibility |
-|---|---|
-| `RoleRegistry` | RBAC for manufacturer / distributor / pharmacy / prescriber / regulator; pseudonyms and regions |
-| `BatchRegistry` | Lot registration (NDC + lot number, expiry, certificate-of-analysis hash) |
-| `CustodyLedger` | Two-sided shipments (ship → accept), closure books, returns and shrinkage |
-| `PrescriptionRegistry` | Single-use permits with quantity balance; unlinkable one-time holder commitments |
-| `DispenseLedger` | Split-record dispensing (single or batched), invariants I1–I4, per-lot lean Poseidon Merkle tree |
-| `RecallRegistry` | Regulator-only immutable recalls, k-anonymous regional aggregates |
-| `AnonymousSignals` | Zero-knowledge adverse-event reports and recall acknowledgements |
+## Source layout
 
-## Documentation
+| Area | Purpose |
+| --- | --- |
+| `apps/web/src/application` | Responsive application, stakeholder screens, browser vault and API client |
+| `services/api` | Authentication, invitations, durable data, documents, anonymous relay and Fabric adapter |
+| `packages/domain` | Shared transactional rules, stock/permit invariants, trees, proofs and privacy projections |
+| `chaincode/lotus` | Actual Fabric contract and chaincode service |
+| `infra/fabric`, `scripts/fabric-*` | Local network configuration, launch, stop and enrollment |
+| `contracts`, `sdk`, `circuits` | Retained EVM/cryptographic reference and regression fixtures |
+| `pipeline`, `redteam` | Retained research/source pipelines and adversary simulations |
 
-- [`docs/REPORT.md`](docs/REPORT.md): full project report with results
-- [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md): adversaries, attacks, mitigations
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): how the pieces fit
-- [`docs/IMPROVEMENTS.md`](docs/IMPROVEMENTS.md): what changed from the synopsis
-- [`docs/DEPLOY.md`](docs/DEPLOY.md): Polygon Amoy deployment
-- [`docs/TEAM_GUIDE.md`](docs/TEAM_GUIDE.md): who owns what
-
-## Team
-
-| # | Member | Role |
-|---|---|---|
-| P1 | Patoju Sai Avinash | Ledger Architecture |
-| P2 | Adabala Venkata Abhinav | Privacy & Key Custody |
-| P3 | K. Jaideep Varma | Rule Enforcement & Verification |
-| P4 | Dhruti P Shetty | Red Team / Adversary Simulation |
-| P5 | Ashmith C Shettigar | Measurement & Evaluation |
-| P6 | P Pattabhi Ram | Data Pipeline & Reproducibility |
-| P7 | Puripanda Venkata Praneeth | Patient-Side Product |
-| P8 | K. Poorna Sai Praneeth | Integration & Deployment |
-
-Manipal Institute of Technology.
+[Migration design](docs/HYPERLEDGER_MIGRATION_PLAN.md) retains the 35-capability checklist and production architecture. [Original report](docs/REPORT.md), threat model and old demo files describe the earlier proof of concept; their synthetic metrics are not performance measurements of this application.
