@@ -3,6 +3,7 @@ const {
   execute,
   projectSnapshot,
   projectPublicFeed,
+  publicLot,
   DomainError,
 } = require("../../packages/domain/src/engine.js");
 const verificationKey = require("../../apps/web/public/zk/verification_key.json");
@@ -154,6 +155,8 @@ class Lotus extends Contract {
     )
       throw new Error("Object is not public.");
     const data = await repo.get(key);
+    if (key.startsWith("lot:") && data)
+      return publicLot(data, [await repo.get(`org:${data.manufacturerId}`)].filter(Boolean));
     if (
       key.startsWith("document:") &&
       data &&

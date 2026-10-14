@@ -53,4 +53,5 @@ test('Fabric PublicFeed uses the same allow-list and manufacturer resolution as 
     },
   };
   assert.deepEqual(await new Lotus().PublicFeed(ctx), expected);
+  assert.deepEqual(await new Lotus().PublicObject(ctx, 'lot:lot-1'), expected.lots[0]);
 });
