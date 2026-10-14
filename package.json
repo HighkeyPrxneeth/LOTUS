@@ -40,7 +40,7 @@
     "tools:evidence": "node scripts/toolchain-evidence.mjs",
     "sandbox": "node scripts/sandbox.mjs",
     "redteam": "npm start -w redteam",
-    "eval": "python3 pipeline/evaluate.py && python3 pipeline/figures.py",
+    "eval": "npm run redteam && python pipeline/evaluate.py && npm run bench:gas -w contracts && python pipeline/figures.py",
     "zk:setup": "bash circuits/setup.sh",
     "report": "bash scripts/build-report.sh"
   },

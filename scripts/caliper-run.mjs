@@ -3,9 +3,21 @@ import { resolve, join } from "node:path";
 import { spawn } from "node:child_process";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { FabricLedger } from "../services/api/src/fabric.js";
 
 const info = JSON.parse(readFileSync(".tooling/caliper-run.json", "utf8"));
+const sourcePaths = [
+  "chaincode/lotus/index.cjs", "packages/domain/src/engine.js",
+  "tools/caliper/workload.cjs", "tools/caliper/serial-rate.cjs",
+];
+const sourceHashes = () => Object.fromEntries(sourcePaths.map((path) => [path,
+  createHash("sha256").update(readFileSync(path)).digest("hex"),
+]));
+const sourceSha256 = sourceHashes();
+const sourceCommit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+assert.equal(execFileSync("git", ["status", "--porcelain", "--", ...sourcePaths], { encoding: "utf8" }).trim(), "",
+  "Commit measured sources before benchmarking so evidence identifies an exact revision.");
 const args = [
   resolve("tools/caliper/node_modules/@hyperledger/caliper-cli/caliper.js"),
   "launch",
@@ -61,17 +73,7 @@ try {
 } finally {
   await ledger.close();
 }
-const sourceSha256 = Object.fromEntries(
-  [
-    "chaincode/lotus/index.cjs",
-    "packages/domain/src/engine.js",
-    "tools/caliper/workload.cjs",
-    "tools/caliper/serial-rate.cjs",
-  ].map((path) => [
-    path,
-    createHash("sha256").update(readFileSync(path)).digest("hex"),
-  ])
-);
+assert.deepEqual(sourceHashes(), sourceSha256, "Measured source changed during the run.");
 const result = {
   tool: "Hyperledger Caliper",
   version: "0.7.1",
@@ -82,6 +84,8 @@ const result = {
   rounds,
   inventoryReconciled: true,
   sourceSha256,
+  sourceCommit,
+  checkedAt: new Date().toISOString(),
   scope:
     "Single-host integration run. Reads are evaluated; writes include valid commit. No Fabric gas metric.",
   report: join(info.dir, "report.html"),

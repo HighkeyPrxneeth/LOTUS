@@ -142,6 +142,14 @@ test('durable application lifecycle with independent actors and real anonymous p
     assert.equal((await mfr.command('registerLot', payload, id)).result.lot.id, lot.id);
     assert.equal((await mfr.command('registerLot', { ...payload, quantity: '9' }, id)).status, 409);
     assert.equal((await mfr.command('registerLot', payload)).error.code, 'LOT_EXISTS');
+    for (const published of [
+      (await anonymous.call('/public/feed')).lots.find((l) => l.id === lot.id),
+      (await anonymous.call(`/public/verify?code=${lot.code}&lot=${lot.lotNumber}`)).matches[0],
+    ]) {
+      assert.equal(published.manufacturer, 'Manufacturer');
+      for (const field of ['manufacturerId', 'quantity', 'dispensedUnits', 'dispenseRecords', 'reportCount', 'severitySum', 'safetySignal', 'currentSegment'])
+        assert.equal(Object.hasOwn(published, field), false, `${field} must stay out of anonymous responses`);
+    }
     const response = await fetch(base + `/api/documents/${doc.id}`);
     assert.equal(await response.text(), 'Verified laboratory certificate');
   });

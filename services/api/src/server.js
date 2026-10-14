@@ -20,7 +20,7 @@ import { pathToFileURL } from "node:url";
 import { Store } from "./store.js";
 import { FabricLedger } from "./fabric.js";
 import { IPFSStore } from "./ipfs.js";
-import { DomainError, publicLot } from "../../../packages/domain/src/engine.js";
+import { DomainError, projectPublicFeed } from "../../../packages/domain/src/engine.js";
 import { parseLotNumbers } from "../../../sdk/src/fda.js";
 import { canonical } from "../../../packages/domain/src/crypto.js";
 
@@ -730,24 +730,10 @@ export function createApp({
     })
   );
   const localFeed = () => {
-    const e = store.entities(),
-      all = (prefix) =>
-        Object.entries(e)
-          .filter(([k]) => k.startsWith(prefix))
-          .map(([, v]) => {
-            const { _key, ...x } = v;
-            return x;
-          });
-    return {
-      lots: all("lot:").map((l) => publicLot(l, all("org:"))),
-      recalls: all("recall:"),
-      leaves: all("leaf:"),
-      roots: Object.entries(e)
-        .filter(([k]) => k.startsWith("root:"))
-        .map(([key]) => ({ key })),
+    return projectPublicFeed(store.entities(), {
       network: ledger.options.network,
       checkedAt: Date.now(),
-    };
+    });
   };
   app.get(
     "/api/public/feed",

@@ -781,10 +781,37 @@ async function consumeSignal(
 
 export function publicLot(l, organizations = []) {
   return {
-    ...l,
+    ...publicFields(l, [
+      "id", "name", "code", "namespace", "lotNumber", "expiry",
+      "documentId", "registeredAt", "recallId",
+    ]),
     manufacturer:
       organizations.find((o) => o.id === l.manufacturerId)?.name ||
       "Registered manufacturer",
+  };
+}
+function publicFields(record, fields) {
+  return Object.fromEntries(fields.filter((field) => Object.hasOwn(record, field))
+    .map((field) => [field, record[field]]));
+}
+// Both ledger modes use this release boundary. Unknown/new entity fields are
+// private by default; membership leaves remain necessary for local proving.
+export function projectPublicFeed(entities, { network, checkedAt }) {
+  const all = (prefix) => Object.entries(entities)
+    .filter(([key]) => key.startsWith(prefix)).map(([, value]) => value);
+  const organizations = all("org:");
+  return {
+    lots: all("lot:").map((lot) => publicLot(lot, organizations)),
+    recalls: all("recall:").map((recall) => publicFields(recall, [
+      "id", "lotId", "classification", "reason", "instructions", "documentId", "issuedAt",
+    ])),
+    leaves: all("leaf:").map((leaf) => publicFields(leaf, [
+      "lotId", "commitment", "leafIndex", "segment",
+    ])),
+    roots: Object.keys(entities).filter((key) => key.startsWith("root:"))
+      .map((key) => ({ key })),
+    network,
+    checkedAt,
   };
 }
 export function projectSnapshot(entities, actor) {
@@ -794,7 +821,7 @@ export function projectSnapshot(entities, actor) {
         .filter((v) => v._key?.startsWith(prefix))
         .map(({ _key, ...v }) => v);
   const organizations = all("org:").filter((o) => o.active),
-    lots = all("lot:").map((l) => publicLot(l, organizations)),
+    lots = all("lot:").map((l) => ({ ...l, manufacturer: publicLot(l, organizations).manufacturer })),
     recalls = all("recall:");
   const oversight = ["operator", "auditor"].includes(actor.role);
   const stocks = all("stock:").filter(

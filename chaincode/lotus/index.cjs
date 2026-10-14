@@ -2,6 +2,7 @@ const { Contract } = require("fabric-contract-api");
 const {
   execute,
   projectSnapshot,
+  projectPublicFeed,
   DomainError,
 } = require("../../packages/domain/src/engine.js");
 const verificationKey = require("../../apps/web/public/zk/verification_key.json");
@@ -136,26 +137,12 @@ class Lotus extends Contract {
   async PublicFeed(ctx) {
     await this.actor(ctx);
     const repo = new FabricRepository(ctx.stub),
-      entities = await repo.all(),
-      values = Object.entries(entities);
-    const all = (prefix) =>
-      values
-        .filter(([k]) => k.startsWith(prefix))
-        .map(([, v]) => {
-          const { _key, ...result } = v;
-          return result;
-        });
+      entities = await repo.all();
     const config = await repo.get("configuration");
-    return {
-      lots: all("lot:"),
-      recalls: all("recall:"),
-      leaves: all("leaf:"),
-      roots: values
-        .filter(([k]) => k.startsWith("root:"))
-        .map(([key]) => ({ key })),
+    return projectPublicFeed(entities, {
       network: config.network,
       checkedAt: Number(ctx.stub.getTxTimestamp().seconds.toString()) * 1000,
-    };
+    });
   }
   async PublicObject(ctx, key) {
     const actor = await this.actor(ctx),

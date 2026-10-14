@@ -13,7 +13,7 @@ const server = await new Promise((resolve) => {
 const base = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({
   headless: true,
-  channel: process.env.PLAYWRIGHT_CHANNEL || "msedge",
+  ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}),
 });
 const errors = [];
 let checks = 0;
