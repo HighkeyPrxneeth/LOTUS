@@ -25,6 +25,7 @@ import {
 } from './vault';
 import { LANGS, t } from '../lib/i18n';
 import QrScanner from '../components/QrScanner';
+import QrDisplay from '../components/QrDisplay';
 
 const nav = [
   ['/patient', 'Home', 'home'],
@@ -66,11 +67,10 @@ export default function PatientWeb() {
     }
   }, []);
   useEffect(() => {
-    if (!wallet) return;
     refresh();
     const timer = setInterval(refresh, 30000);
     return () => clearInterval(timer);
-  }, [Boolean(wallet), refresh]);
+  }, [refresh]);
   useEffect(() => {
     if (!wallet) return;
     let timer;
@@ -247,6 +247,8 @@ export default function PatientWeb() {
                 </p>
               </Card>
             </div>
+            <Message error={syncError} />
+            <PublicRecallBulletins feed={feed} />
           </>
         ) : (
           <>
@@ -403,6 +405,8 @@ function PatientHome({ wallet, mine, affected, feed, error, loading, refresh }) 
             <h2>
               {error || !feed
                 ? 'A current check is still needed'
+                : (feed.recalls || []).length
+                ? 'Public recall bulletin available; no saved receipt match'
                 : 'No matching recalls at the last complete check'}
             </h2>
             <p>
@@ -418,6 +422,7 @@ function PatientHome({ wallet, mine, affected, feed, error, loading, refresh }) 
           </button>
         </Card>
       )}
+      <PublicRecallBulletins feed={feed} affected={affected} compact />
       <div className="patient-home-grid">
         <Link className="patient-task primary" to="/patient/code">
           <Icon name="scan" size={28} />
@@ -643,9 +648,7 @@ function CounterCode({ wallet, update }) {
         >
           {code ? (
             <>
-              <div className="qr-wrap">
-                <QRCodeSVG value={JSON.stringify(code)} size={224} />
-              </div>
+              <QrDisplay value={JSON.stringify(code)} size={300} />
               <Badge>Waiting for a recorded fill</Badge>
               <p>
                 Keep this screen private. Confirm the shelf pack and wait for the pharmacy’s
@@ -673,9 +676,10 @@ function PatientAlerts({ wallet, update, mine, affected, feed, refresh }) {
   return (
     <>
       <PageTitle eyebrow="Private lot matching" title="Your alerts & responses">
-        Eligibility is proved locally. Your secret and the exact receipt you own are not sent with a
-        signal.
+        Public recall bulletins are visible to everyone. Your vault matches them privately against
+        your recorded medicine receipts.
       </PageTitle>
+      <PublicRecallBulletins feed={feed} affected={affected} />
       {unique.length ? (
         unique.map((id) => {
           const l = feed.lots.find((l) => l.id === id),
@@ -724,8 +728,8 @@ function PatientAlerts({ wallet, update, mine, affected, feed, refresh }) {
       ) : (
         <Card>
           <Empty icon="bell" title="No locally matched recall alerts">
-            The last completed check is shown above. Offline or incomplete checks do not establish a
-            current result.
+            Public bulletins, if any, are listed above. No recalled lot currently matches a receipt
+            in this vault. Offline or incomplete checks do not establish a current result.
           </Empty>
         </Card>
       )}
@@ -795,6 +799,53 @@ function PatientAlerts({ wallet, update, mine, affected, feed, refresh }) {
     </>
   );
 }
+
+function PublicRecallBulletins({ feed, affected = [], compact = false }) {
+  const recalls = feed?.recalls || [];
+  const affectedLots = new Set(affected.map((receipt) => receipt.lotId));
+  if (!recalls.length) return null;
+  return (
+    <Card
+      title="Official recall bulletins"
+      subtitle={
+        compact
+          ? `${recalls.length} committed ${recalls.length === 1 ? 'bulletin' : 'bulletins'} · visible to everyone`
+          : 'These regulator-issued notices come from the public ledger feed. A notice alone does not mean your vault owns an affected pack.'
+      }
+    >
+      <div className="permit-list">
+        {recalls.map((recall) => {
+          const lot = feed.lots.find((item) => item.id === recall.lotId);
+          const classification = ['', 'I', 'II', 'III'][recall.classification] || 'Unknown';
+          return (
+            <div key={recall.id} className="recall-bulletin-row">
+              <span className="product-glyph">
+                <Icon name="bell" />
+              </span>
+              <div>
+                <strong>{lot?.name || 'Medicine recall'} · lot {lot?.lotNumber || recall.lotId}</strong>
+                <small>
+                  Class {classification} · {recall.reason} · issued {date(recall.issuedAt)}
+                </small>
+                {!compact && <p>{recall.instructions}</p>}
+              </div>
+              <Badge tone={affectedLots.has(recall.lotId) ? 'bad' : ''}>
+                {affectedLots.has(recall.lotId) ? 'Matches your vault' : 'Public bulletin'}
+              </Badge>
+            </div>
+          );
+        })}
+      </div>
+      {compact && (
+        <p className="table-note">
+          Open Alerts for the official instructions and to see whether any bulletin matches a
+          receipt stored in this vault.
+        </p>
+      )}
+    </Card>
+  );
+}
+
 function Recovery({ wallet, update }) {
   const [show, setShow] = useState(-1);
   return (

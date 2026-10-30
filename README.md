@@ -4,6 +4,10 @@ The requested FireFly, Caliper, Brownie and IPFS integrations are implemented an
 
 LOTUS records medicine lot custody and pharmacy dispensing, then lets recipients recognize relevant recalls and respond privately. The revamped application runs entirely in a browser: a phone-oriented patient PWA, staff workspaces, public pack verification and a separate guardian share vault.
 
+For a one-laptop, one-phone coursework presentation, follow the [five-minute demo run sheet](docs/FIVE_MINUTE_DEMO.md).
+
+After starting the app, run `npm run demo:seed` to replenish fictional Fabric demo stock and staff records. It is safe to rerun when a demo lot has been recalled or used up; it preserves committed history.
+
 ## Start
 
 Use Node 22.13 or newer from this repository root:
@@ -16,7 +20,7 @@ npm start
 
 Open [LOTUS](http://127.0.0.1:8787). Staff access at `/login` provides first-run operator setup; choose your own account credentials. Approve organizations and create private staff invitations. Patients enter at `/patient` without a staff account. No business inventory or patient data is seeded into the normal profile.
 
-`npm start` selects the **Fabric + FireFly + IPFS** operational profile. Prepare its ledger and document services using the toolchain guide before launching a fresh checkout. Runtime binaries, identities and databases are local state and are excluded from Git.
+`npm start` selects the **Fabric + FireFly + IPFS** operational profile. On Windows it starts the offline IPFS daemon and runs the idempotent WSL Fabric and FireFly launchers before opening the web/API process. The prepared Ubuntu WSL and local runtime files must be available. Runtime binaries, identities and databases are local state and are excluded from Git.
 
 `npm run dev` runs the API and frontend development server. `npm run sandbox` starts a separate replay profile on port 8789.
 
