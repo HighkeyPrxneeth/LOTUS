@@ -89,6 +89,20 @@ export async function upload(file, isPublic = true) {
     base64: bytesToBase64(new Uint8Array(await file.arrayBuffer())),
   });
 }
+export const codeNamespaces = (lots = []) => [
+  ...new Set([
+    "NDC",
+    "GTIN",
+    "LOCAL",
+    ...lots.map((lot) => lot.namespace).filter(Boolean),
+  ]),
+];
+export const publicVerificationPath = (lot) =>
+  `/verify?${new URLSearchParams({
+    namespace: lot.namespace,
+    code: lot.code,
+    lot: lot.lotNumber,
+  })}`;
 export function parsePackCode(value) {
   let parsed;
   try {
@@ -101,17 +115,24 @@ export function parsePackCode(value) {
       namespace: url.searchParams.get("namespace") || "NDC",
     };
   }
+  if (!parsed || typeof parsed !== "object")
+    throw new Error("This code does not contain a valid medicine product and lot.");
+  const namespace = parsed.namespace || "NDC";
   if (
     typeof parsed.code !== "string" ||
+    !parsed.code.trim() ||
     typeof parsed.lotNumber !== "string" ||
-    !["NDC", "GTIN", "LOCAL"].includes(parsed.namespace || "NDC")
+    !parsed.lotNumber.trim() ||
+    typeof namespace !== "string" ||
+    !namespace.trim() ||
+    namespace.length > 30
   )
     throw new Error(
-      "This code does not contain a supported medicine product and lot."
+      "This code does not contain a valid medicine product and lot."
     );
   return {
     code: parsed.code,
     lotNumber: parsed.lotNumber,
-    namespace: parsed.namespace || "NDC",
+    namespace,
   };
 }

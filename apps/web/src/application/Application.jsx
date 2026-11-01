@@ -17,7 +17,16 @@ import {
   Navigate,
 } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
-import { api, post, command, date, upload, parsePackCode } from "./api";
+import {
+  api,
+  post,
+  command,
+  date,
+  upload,
+  parsePackCode,
+  codeNamespaces,
+  publicVerificationPath,
+} from "./api";
 import {
   Icon,
   Card,
@@ -36,6 +45,7 @@ import {
 const PatientWeb = React.lazy(() => import("./PatientWeb"));
 const GuardianWeb = React.lazy(() => import("./GuardianWeb"));
 import QrScanner from "../components/QrScanner";
+import QrDisplay from "../components/QrDisplay";
 import "./styles.css";
 import sourceSamples from "../generated/fda-replay.json";
 
@@ -73,6 +83,7 @@ const tabs = {
   ],
   operator: [
     "Overview",
+    "Demo readiness",
     "Organizations",
     "Staff access",
     "Integrations",
@@ -591,6 +602,7 @@ function Operations({ data: d, refresh, tab }) {
     "Staff access": "The right access, for every person",
     Audit: "A durable record of decisions",
     Integrations: "Connections & measured evidence",
+    "Demo readiness": "Prepare one credible live journey",
     Documents: "Quality evidence, attached",
   };
   return (
@@ -602,6 +614,8 @@ function Operations({ data: d, refresh, tab }) {
       </PageTitle>
       {tab === "Overview" ? (
         <Overview d={d} />
+      ) : tab === "Demo readiness" ? (
+        <DemoReadiness d={d} />
       ) : tab === "Organizations" ? (
         <Organizations d={d} run={run} />
       ) : tab === "Staff access" ? (
@@ -650,7 +664,7 @@ const descriptions = {
     "Available, in transit, quarantined, dispensed and lost quantities stay distinct.",
   Incoming: "Stock counts as received only after your organization accepts it.",
   Counter:
-    "Scan the shelf pack and patient code. Hand over only after a recorded receipt.",
+    "Select a ledger lot and scan the patient code. A physical pack scan is optional. Hand over only after a recorded receipt.",
   Returns:
     "Returned or recalled stock remains quarantined until documented disposition.",
   Recalls:
@@ -660,6 +674,93 @@ const descriptions = {
   Organizations:
     "Approve real business organizations before granting staff access.",
 };
+function DemoReadiness({ d }) {
+  const now = Date.now() / 1000;
+  const organizations = new Map(d.organizations.map((org) => [org.id, org]));
+  const candidates = d.lots
+    .filter((lot) => !lot.recallId && lot.expiry > now)
+    .map((lot) => {
+      const available = d.stocks
+        .filter(
+          (stock) =>
+            stock.lotId === lot.id &&
+            organizations.get(stock.orgId)?.type === "pharmacy"
+        )
+        .reduce((total, stock) => total + BigInt(stock.available), 0n);
+      const accepted = d.shipments.filter(
+        (shipment) =>
+          shipment.lotId === lot.id && shipment.status === "accepted"
+      );
+      const manufacturerToDistributor = accepted.some(
+        (shipment) =>
+          organizations.get(shipment.fromOrgId)?.type === "manufacturer" &&
+          organizations.get(shipment.toOrgId)?.type === "distributor"
+      );
+      const distributorToPharmacy = accepted.some(
+        (shipment) =>
+          organizations.get(shipment.fromOrgId)?.type === "distributor" &&
+          organizations.get(shipment.toOrgId)?.type === "pharmacy"
+      );
+      return {
+        lot,
+        available,
+        custodyReady: manufacturerToDistributor && distributorToPharmacy,
+      };
+    })
+    .sort(
+      (a, b) =>
+        Number(b.available > 0n && b.custodyReady) -
+        Number(a.available > 0n && a.custodyReady)
+    );
+  return (
+    <>
+      <div className="metrics-grid three">
+        <Metric
+          label="Selected ledger"
+          value={d.ledger === "fabric" ? "Fabric" : "Local ledger"}
+          hint={d.network}
+        />
+        <Metric label="Active lots" value={candidates.length} />
+        <Metric label="Approved organizations" value={d.organizations.length} />
+      </div>
+      <Card
+        title="Choose the live demo lot"
+        subtitle="This checks committed custody and pharmacy stock. Permit balances and the patient vault remain in their authorized workspaces."
+      >
+        <DataTable
+          headers={[
+            "Medicine / exact lot",
+            "Custody",
+            "Pharmacy units",
+            "Public check",
+          ]}
+          rows={candidates.map(({ lot, available, custodyReady }) => [
+            `${lot.name} · ${lot.namespace} ${lot.code} · ${lot.lotNumber}`,
+            custodyReady ? "Both legs accepted" : "Complete custody first",
+            available.toString(),
+            <Link className="text-button" to={publicVerificationPath(lot)}>
+              Verify this lot
+            </Link>,
+          ])}
+          empty="Register a fictional lot and accept both custody legs before presenting."
+        />
+      </Card>
+      <Card title="Before the five-minute run">
+        <ol className="demo-checklist">
+          <li>Open Integrations and confirm Fabric, FireFly and document storage are connected.</li>
+          <li>Issue a permit for the chosen product, then import it into the patient phone vault.</li>
+          <li>Open separate signed-in browser profiles for pharmacy and regulator.</li>
+          <li>Test phone-to-laptop and laptop-to-phone QR scans, then unlock the phone vault just before starting.</li>
+          <li>Use the public-check link before and after recalling the same lot.</li>
+        </ol>
+        <p className="table-note">
+          The phone vault and camera permissions are private to that device and cannot be checked here.
+          Use synthetic data throughout the presentation.
+        </p>
+      </Card>
+    </>
+  );
+}
 function Overview({ d }) {
   const role = d.user.role,
     stocks = d.stocks.filter((s) => s.orgId === d.user.orgId),
@@ -979,9 +1080,12 @@ function Lots({ d, run }) {
                   code: pack.code,
                   lotNumber: pack.lotNumber,
                 })}
-                size={170}
+                size={280}
               />
             </div>
+            <Link className="button outline small" to={publicVerificationPath(pack)}>
+              Open public lot check
+            </Link>
             <p className="table-note">
               This code identifies the registered lot. It cannot establish the
               physical pack's authenticity.
@@ -1342,9 +1446,11 @@ function Prescribe({ d, run }) {
           <div className="form-columns">
             <Field label="Code namespace">
               <select name="namespace">
-                <option>NDC</option>
-                <option>GTIN</option>
-                <option>LOCAL</option>
+                {codeNamespaces(d.lots).map((namespace) => (
+                  <option key={namespace} value={namespace}>
+                    {namespace === "DEMO" ? "DEMO (fictional)" : namespace}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="Product code">
@@ -1372,9 +1478,7 @@ function Prescribe({ d, run }) {
       >
         {issued ? (
           <>
-            <div className="qr-wrap">
-              <QRCodeSVG value={JSON.stringify(issued)} size={210} />
-            </div>
+            <QrDisplay value={JSON.stringify(issued)} />
             <p className="muted">
               {issued.quantity} units · {issued.code} · valid through{" "}
               {date(issued.expiry)}
@@ -1517,15 +1621,23 @@ function Counter({ d, run }) {
               return "Fill committed. Verify the receipt, then hand over the medicine.";
             }}
           >
-            <Field label="Scanned shelf lot">
+            <Field label="Select ledger lot (virtual shelf)">
               <LotSelect
                 lots={lots}
                 value={scannedLotId}
                 onChange={(e) => setScannedLotId(e.target.value)}
               />
             </Field>
+            {lots.length === 0 && (
+              <p className="table-note" role="status">
+                No eligible stock is assigned to this pharmacy. A physical pack is not required,
+                but the ledger needs an unexpired, un-recalled lot with available units at this
+                pharmacy. Check Operator → Demo readiness, then accept a shipment into this
+                pharmacy or choose another active demo lot.
+              </p>
+            )}
             <QrScanner
-              label="Scan shelf pack"
+              label="Scan physical pack (optional)"
               onResult={(value) => {
                 try {
                   const code = parsePackCode(value);
@@ -1561,12 +1673,7 @@ function Counter({ d, run }) {
           {receipt ? (
             <>
               <Badge>Recorded · ready for handover</Badge>
-              <div className="qr-wrap">
-                <QRCodeSVG
-                  value={JSON.stringify({ v: 2, type: "receipt", ...receipt })}
-                  size={190}
-                />
-              </div>
+              <QrDisplay value={JSON.stringify({ v: 2, type: "receipt", ...receipt })} />
               <textarea
                 readOnly
                 value={JSON.stringify({ v: 2, type: "receipt", ...receipt })}
@@ -1575,6 +1682,16 @@ function Counter({ d, run }) {
               <p className="muted">
                 Patient scans this receipt into their private browser vault.
               </p>
+              {d.lots.find((lot) => lot.id === receipt.lotId) && (
+                <Link
+                  className="button outline small"
+                  to={publicVerificationPath(
+                    d.lots.find((lot) => lot.id === receipt.lotId)
+                  )}
+                >
+                  Check this lot publicly
+                </Link>
+              )}
               <button
                 className="button subtle small"
                 onClick={() => setReceipt(null)}
@@ -1716,6 +1833,7 @@ function Recalls({ d, run }) {
             "Stopped",
             "Returned",
             "Consulted",
+            "Public check",
           ]}
           rows={d.recalls.map((r) => [
             d.lots.find((l) => l.id === r.lotId)?.lotNumber,
@@ -1726,6 +1844,18 @@ function Recalls({ d, run }) {
             r.actions[1],
             r.actions[2],
             r.actions[3],
+            d.lots.find((lot) => lot.id === r.lotId) ? (
+              <Link
+                className="text-button"
+                to={publicVerificationPath(
+                  d.lots.find((lot) => lot.id === r.lotId)
+                )}
+              >
+                Verify lot
+              </Link>
+            ) : (
+              "—"
+            ),
           ])}
         />
         <p className="table-note">
@@ -2208,9 +2338,45 @@ function Audit() {
   );
 }
 function Verify() {
+  const [params] = useSearchParams();
+  const query = params.toString();
+  const linked = {
+    namespace: params.get("namespace"),
+    code: params.get("code"),
+    lotNumber: params.get("lot"),
+  };
   const [result, setResult] = useState(null);
   const [scanned, setScanned] = useState(null),
-    [scanError, setScanError] = useState("");
+    [scanError, setScanError] = useState(""),
+    [knownNamespaces, setKnownNamespaces] = useState([]);
+  useEffect(() => {
+    api("/public/feed")
+      .then((feed) => setKnownNamespaces(codeNamespaces(feed.lots)))
+      .catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (!linked.namespace || !linked.code || !linked.lotNumber) return;
+    let cancelled = false;
+    api(`/public/verify?${query}`)
+      .then((response) => {
+        if (!cancelled) {
+          setResult(response);
+          setScanError("");
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) setScanError(error.message);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [query]);
+  const namespaces = [
+    ...new Set(
+      [...codeNamespaces(), ...knownNamespaces, scanned?.namespace, linked.namespace]
+        .filter(Boolean)
+    ),
+  ];
   return (
     <div className="public-page">
       <PublicHeader />
@@ -2237,7 +2403,7 @@ function Verify() {
           />
           <Message error={scanError} />
           <Form
-            key={scanned ? JSON.stringify(scanned) : "manual"}
+            key={scanned ? JSON.stringify(scanned) : query || "manual"}
             label="Check lot status"
             onSubmit={async (v) => {
               setResult(null);
@@ -2254,24 +2420,26 @@ function Verify() {
               <Field label="Code namespace">
                 <select
                   name="namespace"
-                  defaultValue={scanned?.namespace || "NDC"}
+                  defaultValue={scanned?.namespace || linked.namespace || "NDC"}
                 >
-                  <option>NDC</option>
-                  <option>GTIN</option>
-                  <option>LOCAL</option>
+                  {namespaces.map((namespace) => (
+                    <option key={namespace} value={namespace}>
+                      {namespace === "DEMO" ? "DEMO (fictional)" : namespace}
+                    </option>
+                  ))}
                 </select>
               </Field>
               <Field label="Product code">
                 <input
                   name="code"
-                  defaultValue={scanned?.code || ""}
+                  defaultValue={scanned?.code || linked.code || ""}
                   required
                 />
               </Field>
               <Field label="Lot number">
                 <input
                   name="lot"
-                  defaultValue={scanned?.lotNumber || ""}
+                  defaultValue={scanned?.lotNumber || linked.lotNumber || ""}
                   required
                 />
               </Field>

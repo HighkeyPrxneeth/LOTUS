@@ -48,3 +48,11 @@ tools/brownie/reports/
 tools/brownie/.pytest_cache/
 contracts/config/actors.*.json
 !contracts/config/actors.example.json
+docs/DEMO_SETUP.md
+docs/SCRIPT.md
+*.pdf
+*.pptx
+*.png
+output/presentation/LOTUS_One_Pass_Speaker_Script.md
+output/presentation/LOTUS_Presentation_Notes.txt
+output/presentation/LOTUS_Speaker_Guide.md

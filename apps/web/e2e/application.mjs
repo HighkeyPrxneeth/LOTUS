@@ -122,6 +122,38 @@ try {
       await mfr.request.get(base + "/api/workspace")
     ).json(),
     lot = workspace.lots[0];
+  await mfr.getByRole("button", { name: "Pack code" }).click();
+  await mfr.getByRole("link", { name: "Open public lot check" }).click();
+  await wait(mfr, "Approved custody summary");
+  assert.equal(new URL(mfr.url()).searchParams.get("namespace"), "NDC");
+  const demoLot = (
+    await cmd(mfr, "registerLot", {
+      name: "Fictional demo namespace lot",
+      namespace: "DEMO",
+      code: "DEMO-TEST-PRODUCT",
+      lotNumber: "DEMO-TEST-LOT",
+      quantity: "5",
+      expiry: Math.floor(Date.now() / 1000) + 30 * 86400,
+    })
+  ).result.lot;
+  const publicDemo = await pageFor();
+  await publicDemo.goto(
+    `${base}/verify?namespace=${demoLot.namespace}&code=${demoLot.code}&lot=${demoLot.lotNumber}`
+  );
+  await wait(publicDemo, "Fictional demo namespace lot");
+  assert.equal(await publicDemo.getByLabel("Code namespace").inputValue(), "DEMO");
+  await publicDemo
+    .getByPlaceholder("…or paste the code")
+    .fill(JSON.stringify({
+      type: "pack",
+      namespace: demoLot.namespace,
+      code: demoLot.code,
+      lotNumber: demoLot.lotNumber,
+    }));
+  await publicDemo.getByRole("button", { name: "Use", exact: true }).click();
+  assert.equal(await publicDemo.getByLabel("Code namespace").inputValue(), "DEMO");
+  await publicDemo.getByRole("button", { name: /Check lot status/ }).click();
+  await wait(publicDemo, "Registry check completed.");
   await mfr.goto(base + "/workspace/shipments");
   await mfr.getByLabel("Held stock").selectOption(lot.id);
   await mfr
@@ -146,8 +178,12 @@ try {
   await pharm.goto(base + "/workspace/incoming");
   await pharm.getByRole("button", { name: "Accept", exact: true }).click();
   await wait(pharm, "accepted");
+  await operator.goto(base + "/workspace/demo-readiness");
+  await wait(operator, "Both legs accepted");
   const doctor = people.prescriber.page;
   await doctor.goto(base + "/workspace/issue-permit");
+  await doctor.getByLabel("Code namespace").selectOption("DEMO");
+  await doctor.getByLabel("Code namespace").selectOption("NDC");
   await doctor.getByLabel("Product code", { exact: true }).fill(lot.code);
   await doctor.getByLabel("Authorized base units").fill("60");
   await doctor.getByLabel("Valid through").fill(future);

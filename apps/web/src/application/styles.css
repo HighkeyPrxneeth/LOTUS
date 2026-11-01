@@ -171,6 +171,16 @@ svg {
   border: 1px solid var(--line);
   border-radius: 12px;
 }
+.qr-camera video {
+  display: block;
+  max-width: 100%;
+  object-fit: cover;
+}
+.qr-scan-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
 .qr-controls {
   display: flex;
   align-items: center;
@@ -489,6 +499,29 @@ tr:last-child td {
   max-width: 100%;
   height: auto;
 }
+.qr-zoom-dialog {
+  width: min(95vw, 700px);
+  max-height: 95vh;
+  padding: 20px;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 20px 70px #18251455;
+}
+.qr-zoom-dialog::backdrop {
+  background: #14200fbb;
+}
+.qr-zoom-dialog svg {
+  display: block;
+  width: min(100%, 600px);
+  height: auto;
+  margin: 14px auto;
+}
+.qr-zoom-dialog p {
+  margin: 0;
+  color: var(--muted);
+}
 .receipt-box {
   background: #f4f7ed;
   border: 1px dashed #becdad;
@@ -538,6 +571,14 @@ tr:last-child td {
   grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
   gap: 22px;
   align-items: start;
+}
+.demo-checklist {
+  margin: 0;
+  padding-left: 24px;
+  line-height: 1.7;
+}
+.demo-checklist li + li {
+  margin-top: 8px;
 }
 .public-header {
   height: 89px;
@@ -1519,6 +1560,19 @@ tr:last-child td {
 }
 .permit-list .badge {
   margin-left: auto;
+}
+.recall-bulletin-row > div {
+  min-width: 0;
+  flex: 1;
+}
+.recall-bulletin-row > div p {
+  margin: 8px 0 0;
+  color: #68745d;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.recall-bulletin-row > .badge {
+  flex: 0 0 auto;
 }
 .counter-code-grid {
   display: grid;

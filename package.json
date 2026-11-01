@@ -22,6 +22,7 @@
     "start": "node scripts/start-fabric.mjs",
     "start:local": "node scripts/start-local.mjs",
     "start:fabric": "node scripts/start-fabric.mjs",
+    "demo:seed": "node scripts/demo-seed.mjs",
     "build": "npm run build -w apps/web",
     "dev": "node scripts/dev.mjs",
     "test:app": "npm test -w services/api",
