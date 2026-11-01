@@ -6,6 +6,21 @@ CHANNEL="${LOTUS_FABRIC_CHANNEL:-lotus-operations}"
 export PATH="$ROOT/.fabric-runtime/fabric/bin:$ROOT/.fabric-runtime/node/bin:$PATH"
 export FABRIC_CFG_PATH="$NET/config" FABRIC_LOGGING_SPEC=warn
 mkdir -p "$NET/config" "$NET/logs" "$NET/pids"
+running_orderer(){
+  local pid
+  [ -f "$NET/pids/orderer" ] || return 1
+  pid="$(cat "$NET/pids/orderer")"
+  [[ "$pid" =~ ^[0-9]+$ ]] &&
+    [ "$(readlink -f "/proc/$pid/exe" 2>/dev/null || true)" = "$ROOT/.fabric-runtime/fabric/bin/orderer" ]
+}
+running_peer(){
+  local n="$1" pid
+  [ -f "$NET/pids/peer$n" ] || return 1
+  pid="$(cat "$NET/pids/peer$n")"
+  [[ "$pid" =~ ^[0-9]+$ ]] &&
+    [ "$(readlink -f "/proc/$pid/exe" 2>/dev/null || true)" = "$ROOT/.fabric-runtime/fabric/bin/peer" ] &&
+    tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep -Fxq "CORE_PEER_ID=peer0.org$n.example.com"
+}
 if [ ! -f "$NET/crypto/peerOrganizations/org1.example.com/msp/config.yaml" ]; then cryptogen generate --config="$ROOT/infra/fabric/cryptogen.yaml" --output="$NET/crypto";fi
 node - "$ROOT" <<'NODE'
 const fs=require('fs'),path=require('path'),root=process.argv[2];
@@ -15,7 +30,7 @@ fs.copyFileSync(path.join(root,'.fabric-runtime/fabric/config/orderer.yaml'),pat
 NODE
 if [ ! -f "$NET/$CHANNEL.block" ]; then configtxgen -profile LotusChannel -channelID "$CHANNEL" -outputBlock "$NET/$CHANNEL.block";fi
 ORDERER="$NET/crypto/ordererOrganizations/example.com/orderers/orderer.example.com"
-if [ ! -f "$NET/pids/orderer" ] || ! kill -0 "$(cat "$NET/pids/orderer")" 2>/dev/null;then
+if ! running_orderer;then
   env ORDERER_GENERAL_LISTENADDRESS=127.0.0.1 ORDERER_GENERAL_LISTENPORT=7050 ORDERER_GENERAL_LOCALMSPID=OrdererMSP ORDERER_GENERAL_LOCALMSPDIR="$ORDERER/msp" \
     ORDERER_GENERAL_TLS_ENABLED=true ORDERER_GENERAL_TLS_PRIVATEKEY="$ORDERER/tls/server.key" ORDERER_GENERAL_TLS_CERTIFICATE="$ORDERER/tls/server.crt" ORDERER_GENERAL_TLS_ROOTCAS="[$ORDERER/tls/ca.crt]" \
     ORDERER_GENERAL_KEEPALIVE_SERVERMININTERVAL=10s ORDERER_GENERAL_BOOTSTRAPMETHOD=none ORDERER_CHANNELPARTICIPATION_ENABLED=true ORDERER_ADMIN_LISTENADDRESS=127.0.0.1:7053 ORDERER_ADMIN_TLS_ENABLED=true \
@@ -26,7 +41,7 @@ fi
 for n in 1 2;do
   port=7051;operations=7444;[ "$n" = 2 ] && port=9051 && operations=9444
   peerDir="$NET/crypto/peerOrganizations/org$n.example.com/peers/peer0.org$n.example.com"
-  if [ ! -f "$NET/pids/peer$n" ] || ! kill -0 "$(cat "$NET/pids/peer$n")" 2>/dev/null;then
+  if ! running_peer "$n";then
     env CORE_PEER_ID="peer0.org$n.example.com" CORE_PEER_ADDRESS="localhost:$port" CORE_PEER_LISTENADDRESS="127.0.0.1:$port" CORE_PEER_LOCALMSPID="Org${n}MSP" \
       CORE_PEER_MSPCONFIGPATH="$peerDir/msp" CORE_PEER_FILESYSTEMPATH="$NET/peer$n-data" CORE_LEDGER_SNAPSHOTS_ROOTDIR="$NET/peer$n-snapshots" \
       CORE_PEER_TLS_ENABLED=true CORE_PEER_TLS_CERT_FILE="$peerDir/tls/server.crt" CORE_PEER_TLS_KEY_FILE="$peerDir/tls/server.key" CORE_PEER_TLS_ROOTCERT_FILE="$peerDir/tls/ca.crt" \
